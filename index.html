@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>女友生氣了要怎麼辦🥵</title>
+    <style>
+        body {
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #000;
+        }
+
+        #backgroundWrapper {
+            width: 80vw;
+            max-width: 800px;
+            height: 80vw;
+            max-height: 800px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center bottom;
+        }
+
+        #gameContainer {
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            display: none;
+            box-sizing: border-box;
+            border: 1px solid #fff;
+            overflow: hidden;
+        }
+
+        #messages {
+            height: 80%;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            margin: 5px 0;
+        }
+
+        .userMessage {
+            color: #0f0;
+        }
+
+        .botMessage {
+            color: #ff0;
+        }
+
+        #messageInput {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            background: transparent;
+            border: none;
+            border-top: 1px solid #fff;
+            color: white;
+            font-size: 16px;
+        }
+
+        #startButton,
+        #introButton,
+        #quickButton,
+        #restartButton {
+            padding: 15px 30px;
+            font-size: 20px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #fff;
+            border-radius: 5px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        #startButton:hover,
+        #introButton:hover,
+        #quickButton:hover,
+        #restartButton:hover {
+            background: rgba(0, 0, 0, 1);
+            box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.5);
+            transform: scale(1.05);
+        }
+
+        #introBlock,
+        #inputBlock {
+            width: 80%;
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            box-sizing: border-box;
+            border: 1px solid #fff;
+            margin-bottom: 20px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+        }
+
+        #userInfoForm input {
+            width: 80%;
+            padding: 10px;
+            box-sizing: border-box;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #fff;
+            color: white;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+
+        #submitButton {
+            padding: 15px 30px;
+            font-size: 20px;
+            cursor: pointer;
+            margin-top: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #fff;
+            border-radius: 5px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        #submitButton:hover {
+            background: rgba(0, 0, 0, 1);
+            box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.5);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="introBlock">
+        <h2>歡迎來到《女友生氣了要怎麼辦🥵》</h2>
+        <p>《女友生氣了要怎麼辦》這是一款挑戰玩家創意的對話式冒險遊戲。你將扮演主角騎騎，來哄女友娜娜開心。這個遊戲充滿了挑戰和陷阱，請注意最好用通靈的方式來猜娜娜的心情ㄛ❤️。</p>
+        <button id="startButton">開始遊戲</button>
+    </div>
+
+    <div id="inputBlock">
+        <h2>輸入你的信息</h2>
+        <form id="userInfoForm">
+            <label for="playerName">名字：</label>
+            <input type="text" id="playerName" placeholder="輸入你的名字" required><br><br>
+            <label for="apiKey">API Key：</label>
+            <input type="text" id="apiKey" placeholder="輸入你的 API Key" required><br><br>
+            <button type="submit" id="submitButton">確認並開始遊戲</button>
+        </form>
+    </div>
+
+    <div id="backgroundWrapper" style="background-image: url('./img/scene0.jpg');">
+        <button id="introButton">遊戲介紹</button>
+        <button id="restartButton" style="display: none;">重新開始遊戲</button>
+        <button id="quickButton" style="display: none;">完整顯示對話</button>
+        <div id="gameContainer">
+            <div id="messages"></div>
+            <form id="messageForm">
+                <input type="text" id="messageInput" placeholder="輸入你的選項...">
+            </form>
+        </div>
+    </div>
+
+    <script>
+        var conversationHistory = [];
+        var currentScene = 0;
+        var quickDisplay = false;
+        var playerName = '';
+        var apiKey = '';
+
+        var scenes = [
+            {
+                "scene": "中央女一到四宿舍門口",
+                "text": `你站在中央女一到四宿舍門口，娜娜生氣地看著你，「ㄌㄩㄝ你到底想要幹嘛啦？」你感到一陣緊張，思考著如何化解她的怒火。
+                <br><br><strong>選擇：</strong>
+                <br>A. 認真道歉。
+                <br>B. 開玩笑說：「今晚的月色真美啊。🌝」
+                <br>C. 提議去吃她最喜歡的甜點。`,
+                "options": {
+                    "A": 1,
+                    "B": 2,
+                    "C": 3
+                },
+                "image": "./img/scene1.jpg"
+            },
+            {
+                "scene": "道歉失敗",
+                "text": `你認真道歉，但娜娜不為所動，「道歉有什麼用，這根本是抄脆的道歉SOP，你根本就不明白我生氣的原因！」 
+                <br><strong>結局：</strong>你的道歉讓娜娜更加生氣，她決定把自己冰到宿舍冰箱冷靜。`,
+                "options": {},
+                "image": "./img/scene2.jpg"
+            },
+            {
+                "scene": "開玩笑失敗",
+                "text": `你試圖開個玩笑，說：「今晚的月色真美啊。」娜娜冷冷地看著你，「這時候你還在開玩笑？」 
+                <br><strong>選擇：</strong>
+                <br>A. 認真道歉。
+                <br>B. 說說你唱擱淺給她聽。
+                <br>C. 提議去吃她最喜歡的甜點。`,
+                "options": {
+                    "A": 1,
+                    "B": 4,
+                    "C": 3
+                },
+                "image": "./img/scene3.jpg"
+            },
+            {
+                "scene": "甜點提議",
+                "text": `你提議去吃她最喜歡的甜點，「我們去吃你最喜歡的甜點吧？」娜娜看起來有點動心，但仍舊冷漠地回答，「你以為甜點能解決所有問題嗎？」
+                <br><strong>選擇：</strong>
+                <br>A. 說甜點總是能讓人心情好一點。
+                <br>B. 說你只想讓她開心。
+                <br>C. 提議一起去散步。`,
+                "options": {
+                    "A": 5,
+                    "B": 6,
+                    "C": 7
+                },
+                "image": "./img/scene4.jpg"
+            },
+            {
+                "scene": "唱擱淺失敗",
+                "text": `你試圖唱擱淺給她聽，「我只能永遠讀著對白....破音了」娜娜大笑，但後來又說「你根本不理解我！」 
+                <br><strong>結局：</strong>因為你之前說娜娜是音癡，你的歌聲讓娜娜更加生氣，她決定去倒垃圾不理你。`,
+                "options": {},
+                "image": "./img/scene5.jpg"
+            },
+            {
+                "scene": "甜點失敗",
+                "text": `你說甜點總是能讓人心情好一點，但娜娜不買帳，「我生氣不是因為甜點不夠吃！」 
+                <br><strong>結局：</strong>你的提議未能讓娜娜改變心情，她決定去吃上輝讓心情好一點。`,
+                "options": {},
+                "image": "./img/scene6.jpg"
+            },
+            {
+                "scene": "感動失敗",
+                "text": `你說你只想讓她開心，但娜娜只是冷笑，「你現在才想到要讓我開心？」 
+                <br><strong>結局：</strong>你的解釋沒有打動娜娜，娜娜氣到變成玉米軍艦，並且一直問你要不要吃她「要不要吃」「要不要吃」。`,
+                "options": {},
+                "image": "./img/scene7.jpg"
+            },
+            {
+                "scene": "散步提議",
+                "text": `你提議一起去散步，「我們可以去走走，這樣也許能讓你心情好一點。」娜娜的眼神稍微緩和了一些，「好吧，但你要選個適合的時間。」
+                <br><strong>選擇：</strong>
+                <br>A. 星期三晚上8點。
+                <br>B. 星期四晚上6點。
+                <br>C. 傳訊息問娜娜「要現在嗎」。`,
+                "options": {
+                    "A": 8,
+                    "B": 9,
+                    "C": 10
+                },
+                "image": "./img/scene8.jpg"
+            },
+            {
+                "scene": "星期三晚上8點失敗",
+                "text": `你提議星期三晚上8點散步，娜娜看起來很猶豫，「我那時候已經和社會學約好了。」 
+                <br><strong>結局：</strong>娜娜最終選擇了和社會學老師約會，你錯失了和她散步的機會，她決定之後都和老師在一起。`,
+                "options": {},
+                "image": "./img/scene9.jpg"
+            },
+            {
+                "scene": "星期四晚上6點失敗",
+                "text": `你提議星期四晚上6點散步，娜娜答應了。「好啊，我們可以先去排球場。」但突然一顆排球飛來，娜娜進行低手發球的時候，球不小心打到了你的臉。 
+                <br><strong>結局：</strong>你被球擊中，臉部受傷，娜娜對此感到很抱歉，這次散步以失敗告終。`,
+                "options": {},
+                "image": "./img/scene10.jpg"
+            },
+            {
+                "scene": "傳訊息問娜娜",
+                "text": `你傳訊息問娜娜「要現在嗎」，她回覆說：「好啊，我現在正好有空。」 
+                <br><strong>選擇：</strong>
+                <br>A. 去中大湖邊散步。
+                <br>B. 去繞校園。
+                <br>C. 去宵夜街和後門。
+                <br>D. 跟娜娜聊到歷史。`,
+                "options": {
+                    "A": 11,
+                    "B": 12,
+                    "C": 13,
+                    "D": 17
+                },
+                "image": "./img/scene11.jpg"
+            },
+            {
+                "scene": "中大湖邊散步",
+                "text": `你們來到中大湖邊，微風輕拂，娜娜的情緒似乎逐漸緩和。
+                <br><br><strong>娜娜：</strong>「這裡真安靜，我的心情好像好了一點。」「我們去甲板吧！」 
+                <br><strong>選擇：</strong>
+                <br>A. 提議坐下來聊聊。
+                <br>B. 問她為什麼生氣。
+                <br>C. 說你一直都在乎她的感受。`,
+                "options": {
+                    "A": 14,
+                    "B": 15,
+                    "C": 16
+                },
+                "image": "./img/scene12.jpg"
+            },
+            {
+                "scene": "去繞校園",
+                "text": `你們繞著校園，好幾圈，好幾圈，好幾圈。娜娜的心情似乎稍有緩和。
+                <br><br><strong>娜娜：</strong>「真的好喜歡走走。」「下次一起走到臺北」
+                <br><strong>選擇：</strong>
+                <br>A. 提議坐下來聊聊。
+                <br>B. 問她為什麼生氣。
+                <br>C. 說你一直都在乎她的感受。`,
+                "options": {
+                    "A": 14,
+                    "B": 15,
+                    "C": 16
+                },
+                "image": "./img/scene13.jpg"
+            },
+            {
+                "scene": "去宵夜街和後門",
+                "text": `你們來到宵夜街和後門，周圍都是食物的味道，娜娜的心情似乎逐漸平靜。
+                <br><br><strong>娜娜：</strong>「有食物的地方，真的是我最喜歡的地方。」 
+                <br><strong>選擇：</strong>
+                <br>A. 提議坐下來聊聊。
+                <br>B. 問她為什麼生氣。
+                <br>C. 說你一直都在乎她的感受。`,
+                "options": {
+                    "A": 14,
+                    "B": 15,
+                    "C": 16
+                },
+                "image": "./img/scene14.jpg"
+            },
+            {
+                "scene": "聊天",
+                "text": `你們聊聊，娜娜終於把心中的煩惱告訴了你，「我只是覺得你誤會我了。」
+                「我只是很認真在寫我的程式作業，不是不理你。」 「這個作業我從晚上六點寫到隔天八點」
+
+                <br><strong>結局：</strong>你耐心聽她說。你說「好，那我們等一下吃歪好絲」。
+                讓娜娜感覺好多了，你們的關係得到了修復。
+                娜娜很開心地說：「真的好開心喔，騎騎，你真的很懂我！」，娜娜決定乖乖地規劃下一次的旅行。你成功了。`,
+                "options": {},
+                "image": "./img/scene15.jpg"
+            },
+            {
+                "scene": "問生氣原因",
+                "text": `你問她為什麼生氣，娜娜告訴了你一些事情，「我覺得你忽視了我。」「我沒有不回你訊息，我只是寫作業到天亮沒睡覺」
+                「我沒有回家就忘記你，是我真的很不會寫程式，寫好久。」
+
+                <br><strong>結局：</strong>你耐心聽她說讓娜娜感覺好多了。
+                你說「好，那我們去買迷客夏吧法芙娜可可無糖」。你們的關係得到了修復。
+                娜娜很開心地說：「真的好開心喔，騎騎，你真的很懂我！」，娜娜決定乖乖地規劃下一次的旅行。你成功了。`,
+                "options": {},
+                "image": "./img/scene16.jpg"
+            },
+            {
+                "scene": "表達關心",
+                "text": `你告訴她你一直都很在乎她的感受，娜娜感動地看著你，「謝謝你在乎我。」
+                 「我只是睡著的時候你醒著，你醒著的時候我睡著。」「我沒有不讀你訊息」
+
+                <br><strong>結局：</strong>你們在度過了一個愉快的時光，娜娜的心情逐漸恢復。
+                「要不要去吃冰淇淋」娜娜很開心地說：「真的好開心喔，騎騎，你真的很懂我！」，娜娜決定乖乖地規劃下一次的旅行。你成功了`,
+                "options": {},
+                "image": "./img/scene17.jpg"
+            },
+            {
+                "scene": "聊到歷史",
+                "text": `你跟娜娜聊到歷史，娜娜顯得很有興趣。 
+                <br><strong>選擇：</strong>
+                <br>A. 表現興奮，跟娜娜暢聊。 
+                <br>B. 打哈欠，娜娜很難過，並開始發出「呀呀呀呀」的聲音。 
+                <br>C. 轉移注意力，觸發另一個事件。`,
+                "options": {
+                    "A": 18,
+                    "B": 19,
+                    "C": 20
+                },
+                "image": "./img/scene18.jpg"
+            },
+            {
+                "scene": "故宮提議失敗",
+                "text": `因為聊歷史很開心，娜娜提議去參觀故宮，但騎騎實際上對此不感興趣，表示失敗。`,
+                "options": {},
+                "image": "./img/scene19.jpg"
+            },
+            {
+                "scene": "呀呀呀失敗失敗👩🏻",
+                "text": `娜娜開始發出「呀呀呀呀」的聲音，讓騎騎感到非常尷尬，突然娜娜發出光，變成了騎騎的媽媽，這使得騎騎無法忍受，表示失敗。`,
+                "options": {},
+                "image": "./img/scene20.jpg"
+            },
+            {
+                "scene": "轉移注意力",
+                "text": `你試圖轉移娜娜的注意力。 
+                <br><strong>選擇：</strong>
+                <br>A. 問娜娜有沒有聽過伽利略。 
+                <br>B. 問娜娜有沒有聽過吳三桂。 
+                <br>C. 問娜娜有沒有聽過達文西。`,
+                "options": {
+                    "A": 21,
+                    "B": 22,
+                    "C": 23
+                },
+                "image": "./img/scene21.jpg"
+            },
+            {
+                "scene": "伽利略失敗失敗🧔🏻‍♂️",
+                "text": `你問娜娜有沒有聽過伽利略，娜娜突然像附身一樣，不停地大喊「光明會！光明會！光明會！」，你不知道如何應對，表示失敗。`,
+                "options": {},
+                "image": "./img/scene22.jpg"
+            },
+            {
+                "scene": "吳三桂失敗",
+                "text": `你問娜娜有沒有聽過吳三桂，娜娜突然怒髮衝冠，臉色變得非常生氣「好哇＠＠就圓圓」，最終她氣得轉身離開，表示失敗。`,
+                "options": {},
+                "image": "./img/scene23.jpg"
+            },
+            {
+                "scene": "達文西失敗",
+                "text": `你問娜娜有沒有聽過達文西，娜娜變得非常開心，提議一起去看達文西的展覽，但你對此其實並不感興趣，表示失敗。`,
+                "options": {},
+                "image": "./img/scene24.jpg"
+            }
+        ];
+
+        document.getElementById('messageForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            var inputElement = document.getElementById('messageInput');
+            var message = inputElement.value.trim().toUpperCase();
+
+            addToConversationHistory('user', message);
+            displayMessage(message, 'user');
+            inputElement.disabled = true;
+
+            setTimeout(() => {
+                inputElement.disabled = false;
+                handleSceneChange(message);
+            }, 500);
+
+            document.getElementById('messageInput').value = '';
+        });
+
+        document.getElementById('introButton').addEventListener('click', function () {
+            document.getElementById('introBlock').style.display = 'block';
+            this.style.display = 'none';
+            document.getElementById('startButton').style.display = 'block';
+        });
+
+        document.getElementById('startButton').addEventListener('click', function () {
+            document.getElementById('introBlock').style.display = 'none';
+            document.getElementById('inputBlock').style.display = 'block';
+        });
+
+        document.getElementById('userInfoForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            playerName = document.getElementById('playerName').value.trim();
+            apiKey = document.getElementById('apiKey').value.trim();
+
+            if (playerName && apiKey) {
+                console.log(`玩家名字：${playerName}`);
+                console.log(`API Key：${apiKey}`);
+
+                document.getElementById('inputBlock').style.display = 'none';
+                document.getElementById('backgroundWrapper').style.backgroundImage = `url('${scenes[0].image}')`;
+                document.getElementById('gameContainer').style.display = 'inline';
+                document.getElementById('introButton').style.display = 'none';
+                document.getElementById('quickButton').style.display = 'inline';
+                document.getElementById('restartButton').style.display = 'inline';
+
+                displayScene();
+            } else {
+                alert("請輸入你的名字和 API Key！");
+            }
+        });
+
+        document.getElementById('quickButton').addEventListener('click', function () {
+            quickDisplay = !quickDisplay;
+            this.innerText = quickDisplay ? '關閉快捷顯示' : '快捷顯示對話';
+        });
+
+        document.getElementById('restartButton').addEventListener('click', function () {
+            currentScene = 0;
+            conversationHistory = [];
+            document.getElementById('messages').innerHTML = '';
+            document.getElementById('backgroundWrapper').style.backgroundImage = `url('${scenes[0].image}')`;
+            displayScene();
+        });
+
+        function addToConversationHistory(role, text) {
+            conversationHistory.push({
+                "role": role,
+                "parts": [{
+                    "text": text
+                }]
+            });
+        }
+
+        function displayMessage(message, sender) {
+            var messageElement = document.createElement('div');
+            var formatMessage = formatText(message);
+            messageElement.classList.add('message');
+            if (sender === 'user') {
+                messageElement.classList.add('userMessage');
+            } else {
+                messageElement.classList.add('botMessage');
+            }
+            document.getElementById('messages').appendChild(messageElement);
+
+            function typeText(element, text, index) {
+                if (quickDisplay) {
+                    element.innerHTML = text;
+                    document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+                } else {
+                    if (index < text.length) {
+                        let char = text[index];
+                        if (char === '<') {
+                            let endIndex = text.indexOf('>', index);
+                            if (endIndex !== -1) {
+                                element.innerHTML += text.substring(index, endIndex + 1);
+                                index = endIndex + 1;
+                            }
+                        } else {
+                            element.innerHTML += char;
+                            index++;
+                        }
+                        setTimeout(function () {
+                            typeText(element, text, index);
+                        }, 75);
+                    } else {
+                        document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+                    }
+                }
+            }
+
+            typeText(messageElement, formatMessage, 0);
+        }
+
+        function handleSceneChange(option) {
+            var currentOptions = scenes[currentScene].options;
+            if (currentOptions[option] !== undefined) {
+                currentScene = currentOptions[option];
+                displayScene();
+                document.getElementById('backgroundWrapper').style.backgroundImage = `url('${scenes[currentScene].image}')`;
+            } else {
+                displayMessage("無效的選項，請輸入有效的選項（例如：A，B，C）。", 'bot');
+            }
+        }
+
+        function displayScene() {
+            var scene = scenes[currentScene];
+            var sceneText = `<br><strong>場景：${scene.scene}</strong><br>${scene.text}`;
+            displayMessage(sceneText, 'bot');
+        }
+
+        function formatText(text) {
+            let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<br><strong>$1</strong>');
+            formattedText = text.replace(/\*(.*?)\s/g, '<br>$1');
+            return formattedText;
+        }
+    </script>
+</body>
+
+</html>
